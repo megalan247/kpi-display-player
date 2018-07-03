@@ -5,7 +5,6 @@ const request = require('request');
 const serialNumber = require('serial-number');
 const fs = require('fs');
 const bodyParser = require("body-parser");
-const renderer = require("./render");
 const pug = require('pug');
  
 // Keep a global reference of the window object, if you don't, the window will
@@ -37,7 +36,8 @@ function createWindow () {
 function initializeScreens(playerConfig) {
   displayedScreenArray = [];
   request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getscreens/' + process.env.PLAYER_ID, function(err,httpResponse,body){
-    var screenConfig = bodyParser.json(body);
+    var screenConfig = body;
+    
   })
 }
 
