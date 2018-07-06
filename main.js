@@ -1,6 +1,6 @@
 require('dotenv').config();
 const electron = require('electron');
-const {app, BrowserWindow} = electron;
+const {app, BrowserWindow, session} = electron;
 const request = require('request');
 const serialNumber = require('serial-number');
 const fs = require('fs');
@@ -33,11 +33,61 @@ function createWindow () {
   // Create the browser window.
 }
 
+function registerNewScreen() {
+
+}
+
+function reportDisabledScreen(screenID, electronID) {
+  console.log("Reporting disabled screen" + screenID);
+}
+
+function setCookies(browser, sites) {
+  for(var site in sites) {
+    request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getCookies/' + sites[site].site_id, function(err,httpResponse,body){
+      var parsedResponse = JSON.parse(body);
+      for(var k in parsedResponse) {
+        browser.webContents.session.cookies.set({url: parsedResponse[k].cookie_url, name: parsedResponse[k].cookie_name, value: parsedResponse[k].cookie_value}, function(error) {
+          console.log(error);
+        });
+        console.log({url: parsedResponse[k].cookie_url, name: parsedResponse[k].cookie_name, value: parsedResponse[k].cookie_value})
+      }; 
+    });
+  }
+
+  browser.openDevTools();
+
+}
+
+function assignSites(screen, electronScreen) {
+  request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getSites/' + screen.screen_id, function(err,httpResponse,body){
+    var parsedResponse = JSON.parse(body);
+    var browser = new BrowserWindow({
+      fullscreen: true, 
+      frame: false,
+      x: electronScreen.bounds.x + 50,
+      y: electronScreen.bounds.y + 50
+    })
+    var renderedHTML = pug.renderFile('./layouts/layout' + screen.screen_layout + '.pug', {main: JSON.parse(body)});
+    browser.loadURL('data:text/html;charset=utf-8,' + encodeURI(renderedHTML));
+    setCookies(browser, parsedResponse);
+  });
+}
+
 function initializeScreens(playerConfig) {
   displayedScreenArray = [];
-  request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getscreens/' + process.env.PLAYER_ID, function(err,httpResponse,body){
-    var screenConfig = body;
-    
+  screenArray = electron.screen.getAllDisplays();
+  request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getScreens/' + process.env.PLAYER_ID, function(err,httpResponse,body){
+    var screenConfig = JSON.parse(body);
+    for(var k in screenConfig) {
+      screenArray.forEach(function(scr) {
+        if (screenConfig[k].screen_electronScreenId == scr.id) {
+          assignSites(screenConfig[k], scr)
+        } else {
+          console.log("Screen not matched.")
+        }
+      });
+    }
+      
   })
 }
 
@@ -57,8 +107,6 @@ function displayAdoptionScreen(body) {
 }
 
 function processConfig() {
-  app.quit();
-  displayedScreenArray.length = 0;
   request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getPlayer/' + process.env.PLAYER_ID, function(err,httpResponse,body){
     initializeScreens(JSON.parse(body));
   })
@@ -73,9 +121,11 @@ function getConfig() {
     console.log("No player ID saved in env file, registering with server " + process.env.HOST + ":" + process.env.HOST_PORT);
     serialNumber(function (err, value) {
       request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/registerPlayer', form: {name:value}} , function(err,httpResponse,body){
-        console.log(body);
+        fs.appendFile('.env', "\nPLAYER_ID=" + JSON.parse(body).id, function (err) {
+          if (err) throw err;
+          console.log('Updated .env file with player id');
+        });
         displayAdoptionScreen(JSON.parse(body));
-
       })
     });
   } else {

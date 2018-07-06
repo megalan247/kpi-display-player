@@ -1,0 +1,30 @@
+style.
+  html,body,webview {
+    margin: 0;
+    padding: 0;
+    width:100%;
+    height: 100%;
+  }
+
+  .half-hor {
+      height: 100%;
+      width: 50%;
+      display: inline-flex;
+
+  }
+
+  .half-vert {
+      height: 50%;
+      display: block;
+  }
+
+.half-vert
+    .half-hor
+        webview(src=main[0].site_url, guestinstance="0")
+    .half-hor
+        webview(src=main[1].site_url, guestinstance="0")
+.half-vert
+    .half-hor
+        webview(src=main[2].site_url, guestinstance="0")
+    .half-hor
+        webview(src=main[3].site_url, guestinstance="0")
