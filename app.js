@@ -6,6 +6,9 @@ const serialNumber = require('serial-number');
 const fs = require('fs');
 const bodyParser = require("body-parser");
 const pug = require('pug');
+const express = require('express');
+const expressApp = express();
+const {autoUpdater} = require("electron-updater");
 
 
 
@@ -49,7 +52,7 @@ function initializeScreens(playerConfig) {
         }
         for(var k in configFromServer) {
             if (configFromServer[k].screen_electronScreenId == scr.id) {
-                    assignSites(configFromServer[k], scr);
+                assignSites(configFromServer[k], scr);
             }
         }
     });
@@ -62,21 +65,6 @@ function registerScreen(electronScreen) {
         var parsedRespose = JSON.parse(body);
         assignSites(parsedRespose, electronScreen)
     });
-}
-
-function displayAdoptionScreen(body) {
-  electron.screen.getAllDisplays().forEach(function(item) {
-    new BrowserWindow({
-      fullscreen: true, 
-      frame: false,
-      x: item.bounds.x + 50,
-      y: item.bounds.y + 50
-    })
-      .loadURL('data:text/html;charset=utf-8,' + encodeURI(pug.renderFile('./layouts/new_adopt.pug', {
-          id: body.id,
-          screenId: item.id
-        })));
-   });
 }
 
 function processConfig() {
@@ -97,8 +85,11 @@ function getConfig() {
         fs.appendFile('.env', "\nPLAYER_ID=" + JSON.parse(body).id, function (err) {
           if (err) throw err;
           console.log('Updated .env file with player id');
+          require('dotenv').config();
+          electron.screen.getAllDisplays().forEach(function(item) {
+            registerScreen(item);
+           });
         });
-        displayAdoptionScreen(JSON.parse(body));
       })
     });
   } else {
@@ -113,12 +104,35 @@ app.on('ready', getConfig)
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
-  // On OS X it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+  getConfig();
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+function updateConfig(req, res) {
+    BrowserWindow.getAllWindows().forEach(function(item) {
+      item.close();
+    });
+}
+
+function upgradeApplication(req, res) {
+    autoUpdater.checkForUpdates();
+}
+
+autoUpdater.on('update-available', (info) => {
+    appUpdater.downloadUpdate();
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+  autoUpdater.quitAndInstall(true, true);  
+})
+
+function rebootSystem(req, res) {
+  
+}
+
+expressApp.get('/update', updateConfig);
+expressApp.get('/upgrade', upgradeApplication);
+expressApp.get('/reboot', rebootSystem);
+expressApp.get('/quit', (req, res) => {res.send({result: "SUCCESS"}); process.exit()});
+
+
+expressApp.listen(4000, () => console.log('Player listening on port 4000 for commands'))
