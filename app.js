@@ -2,7 +2,6 @@ require('dotenv').config();
 const electron = require('electron');
 const {app, BrowserWindow, session} = electron;
 const request = require('request');
-const serialNumber = require('serial-number');
 const fs = require('fs');
 const bodyParser = require("body-parser");
 const pug = require('pug');
