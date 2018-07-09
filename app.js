@@ -11,8 +11,26 @@ const {autoUpdater} = require("electron-updater");
 const si = require('systeminformation');
 const os = require('os');
 const sysdata = si.system();
+
+
 function updateInventory() {
 
+  si.system(function(data) {
+    var formData = {
+      id: process.env.PLAYER_ID,
+      name: os.hostname(),
+      playerType: data.manufacturer + " " + data.model,
+      serialNumber: data.serial,
+      OSName: os.platform(),
+      OSVersion: os.release(),
+      macAddress: "WAITING FOR UPDATE",
+      freeSpace: "NOT IMPLIMENTED",
+      cpu: "NOT IMPLIMENTED",
+    }  
+    request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/registerPlayer', form: formData} , function(err,httpResponse,body){
+      
+    });
+  });
 }
 
 function executeJavaScriptInBrowser(browser, sites) {
