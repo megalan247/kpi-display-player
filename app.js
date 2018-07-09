@@ -180,17 +180,22 @@ function updateConfig(req, res) {
 }
 
 function upgradeApplication(req, res) {
-    autoUpdater.checkForUpdates();
-    res.send({result: "CHECK_UPDATES_SUCCESS"});
+  var spawn = require('child_process').spawn;
+  var prc = spawn('git',  ['pull']);
+  
+  //noinspection JSUnresolvedFunction
+  prc.stdout.setEncoding('utf8');
+  prc.stdout.on('data', function (data) {
+      var str = data.toString()
+      var lines = str.split(/(\r?\n)/g);
+      console.log(lines.join(""));
+  });
+  
+  prc.on('close', function (code) {
+    spawn('npm',  ['start']);
+    app.exit();
+  });
 }
-
-autoUpdater.on('update-available', (info) => {
-    appUpdater.downloadUpdate();
-})
-
-autoUpdater.on('update-downloaded', (info) => {
-  autoUpdater.quitAndInstall(true, true);  
-})
 
 function rebootSystem(req, res) {
 
