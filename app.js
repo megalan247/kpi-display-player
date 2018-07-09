@@ -10,7 +10,8 @@ const expressApp = express();
 const {autoUpdater} = require("electron-updater");
 const si = require('systeminformation');
 const os = require('os');
-const sysdata = si.system();
+const powerSaveBlocker = require('electron').powerSaveBlocker;
+powerSaveBlocker.start('prevent-app-suspension');
 
 
 function updateInventory() {
@@ -110,7 +111,7 @@ function processConfig() {
   request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getPlayer/' + process.env.PLAYER_ID, function(err,httpResponse,body){
     initializeScreens(JSON.parse(body));
     updateInventory();
-    setTimeout(updateInventory, 600000);
+    setTimeout(updateInventory, 300000);
   })
 }
 
