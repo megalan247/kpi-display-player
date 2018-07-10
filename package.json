@@ -6,7 +6,7 @@
   "repository": "https://github.com/megalan247/kpi-display-player",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron app.js",
+    "start": "electromon app.js",
     "publish": "build --win --linux -p always"
   },
   "author": "",
