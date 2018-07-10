@@ -50,7 +50,7 @@ function executeJavaScriptInBrowser(browser, sites) {
       var parsedResponse = JSON.parse(body);
       var combinedJSString;
       for(var k in parsedResponse) {
-        combinedJSString += parsedResponse[k].js_command
+        combinedJSString += "document.getElementById('webview1').executeJavaScript(" + parsedResponse[k].js_command + ");"
       }; 
       browser.webContents.executeJavaScript("document.getElementById('webview1').addEventListener('dom-ready', () => {" + combinedJSString + "});")
       browser.openDevTools();
