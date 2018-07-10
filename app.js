@@ -48,11 +48,12 @@ function executeJavaScriptInBrowser(browser, sites) {
   for(var site in sites) {
     request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getJS/' + sites[site].site_id, function(err,httpResponse,body){
       var parsedResponse = JSON.parse(body);
+      var combinedJSString;
       for(var k in parsedResponse) {
-        browser.webContents.session.cookies.set({url: parsedResponse[k].cookie_url, name: parsedResponse[k].cookie_name, value: parsedResponse[k].cookie_value}, function(error) {
-          console.log(error);
-        });
+        combinedJSString += parsedResponse[k].js_command
       }; 
+      browser.webContents.executeJavaScript("document.getElementById('webview" + site.position + "').addEventListener('dom-ready', () => {" + combinedJSString + "});")
+      browser.showDevTools();
     });
   }
 }
@@ -84,7 +85,7 @@ function assignSites(screen, electronScreen) {
     var renderedHTML = pug.renderFile('./layouts/layout' + screen.screen_layout + '.pug', {main: JSON.parse(body)});
     browser.loadURL('data:text/html;charset=utf-8,' + encodeURI(renderedHTML));
     setCookies(browser, parsedResponse);
-    //executeJavaScriptInBrowser(browser, parsedResponse);
+    executeJavaScriptInBrowser(browser, parsedResponse);
   });
 }
 
