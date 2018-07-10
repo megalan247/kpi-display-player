@@ -189,6 +189,7 @@ function upgradeApplication(req, res) {
       var lines = str.split(/(\r?\n)/g);
       console.log(lines.join(""));
   });
+  res.send({result: "success"});
 }
 
 function rebootSystem(req, res) {
