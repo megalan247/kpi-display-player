@@ -39,7 +39,7 @@ function updateInventory() {
     prc.stdout.on('data', function (data) {
         var str = data.toString()
         var lines = str.split(/(\r?\n)/g);
-        console.log(lines.join(""));
+        //console.log(lines.join(""));
     });
   });
 }
@@ -49,10 +49,18 @@ function executeJavaScriptInBrowser(browser, sites) {
     request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getJavaScript/' + sites[site].site_id, function(err,httpResponse,body){
       var parsedResponse = JSON.parse(body);
       var combinedJSString;
-      for(var k in parsedResponse) {
-        combinedJSString += "document.getElementById('webview1').executeJavaScript(" + parsedResponse[k].js_command + ");"
+       for(var k in parsedResponse) {
+        if(k == 0) {
+          combinedJSString = parsedResponse[k].js_command
+        } else {
+          combinedJSString += parsedResponse[k].js_command
+        } 
+        
       }; 
-      browser.webContents.executeJavaScript("document.getElementById('webview1').addEventListener('dom-ready', () => {webview.openDevTools();});")
+      console.log(combinedJSString);
+      browser.webContents.executeJavaScript("document.getElementById('webview1').addEventListener('load', () => {document.getElementById('webview1').executeJavaScript(\"" + combinedJSString + "\")});");
+      browser.webContents.executeJavaScript("document.getElementById('webview1').openDevTools();")
+      browser.openDevTools();
     });
   }
 }
@@ -64,7 +72,6 @@ function setCookies(browser, sites) {
       var parsedResponse = JSON.parse(body);
       for(var k in parsedResponse) {
         browser.webContents.session.cookies.set({url: parsedResponse[k].cookie_url, name: parsedResponse[k].cookie_name, value: parsedResponse[k].cookie_value}, function(error) {
-          console.log(error);
         });
       }; 
     });
@@ -147,7 +154,6 @@ function getConfig() {
       OSVersion: os.release(),
       macAddress: "WAITING FOR UPDATE"
     }
-    console.log(formData);
     
     request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/registerPlayer', form: formData} , function(err,httpResponse,body){
       // Then appends the requested player ID to the environment file to persisit the ID
