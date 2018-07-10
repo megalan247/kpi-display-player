@@ -46,7 +46,7 @@ function updateInventory() {
 
 function executeJavaScriptInBrowser(browser, sites) {
   for(var site in sites) {
-    request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getJS/' + sites[site].site_id, function(err,httpResponse,body){
+    request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getJavaScript/' + sites[site].site_id, function(err,httpResponse,body){
       var parsedResponse = JSON.parse(body);
       var combinedJSString;
       for(var k in parsedResponse) {
