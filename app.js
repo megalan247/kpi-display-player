@@ -31,6 +31,16 @@ function updateInventory() {
     request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/updatePlayer', form: formData} , function(err,httpResponse,body){
       
     });
+    var spawn = require('child_process').spawn;
+    var prc = spawn('git',  ['pull']);
+    
+    //noinspection JSUnresolvedFunction
+    prc.stdout.setEncoding('utf8');
+    prc.stdout.on('data', function (data) {
+        var str = data.toString()
+        var lines = str.split(/(\r?\n)/g);
+        console.log(lines.join(""));
+    });
   });
 }
 
