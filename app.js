@@ -189,11 +189,6 @@ function upgradeApplication(req, res) {
       var lines = str.split(/(\r?\n)/g);
       console.log(lines.join(""));
   });
-  
-  prc.on('close', function (code) {
-    app.exit();
-    expressApp.exit();
-  });
 }
 
 function rebootSystem(req, res) {
