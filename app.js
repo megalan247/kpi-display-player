@@ -59,6 +59,7 @@ function executeJavaScriptInBrowser(browser, sites) {
       };
       console.log(sites[site].site_position);
       browser.webContents.executeJavaScript("document.getElementById('webview" + sites[site].site_position + "').addEventListener('did-finish-load', () => {document.getElementById('webview1').executeJavaScript(\"" + combinedJSString + "\")});");
+      browser.webContents.executeJavaScript("document.getElementById('webview" + sites[site].site_position + "').addEventListener('did-navigate-in-page', () => {document.getElementById('webview1').executeJavaScript(\"" + combinedJSString + "\")});");
     });
   }
 }
