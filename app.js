@@ -53,7 +53,7 @@ function executeJavaScriptInBrowser(browser, sites) {
         combinedJSString += parsedResponse[k].js_command
       }; 
       browser.webContents.executeJavaScript("document.getElementById('webview" + site.position + "').addEventListener('dom-ready', () => {" + combinedJSString + "});")
-      browser.showDevTools();
+      browser.openDevTools();
     });
   }
 }
