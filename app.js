@@ -83,7 +83,6 @@ function initializeScreens(playerConfig) {
   request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getScreens/' + process.env.PLAYER_ID, function(err,httpResponse,body){
     var configFromServer = JSON.parse(body);
     screenArray.forEach(function(scr) {
-        console.log(configFromServer.length)
         if (configFromServer.length == 0) {
             registerScreen(scr);
         }
@@ -192,8 +191,8 @@ function upgradeApplication(req, res) {
   });
   
   prc.on('close', function (code) {
-    spawn('npm',  ['start']);
     app.exit();
+    expressApp.exit();
   });
 }
 
