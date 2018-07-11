@@ -126,7 +126,7 @@ function processConfig() {
   request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getPlayer/' + process.env.PLAYER_ID, function(err,httpResponse,body){
     initializeScreens(JSON.parse(body));
     updateInventory();
-    setTimeout(updateInventory, 300000);
+    setTimeout(updateInventory, 30000);
   })
 }
 
