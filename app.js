@@ -33,14 +33,12 @@ function updateInventory() {
     });
     var spawn = require('child_process').spawn;
     var prc = spawn('git',  ['pull']);
-    
-    //noinspection JSUnresolvedFunction
     prc.stdout.setEncoding('utf8');
     prc.stdout.on('data', function (data) {
         var str = data.toString()
         var lines = str.split(/(\r?\n)/g);
-        //console.log(lines.join(""));
-    });
+        console.log(lines.join(""));
+    }); 
   });
 }
 
