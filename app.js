@@ -32,13 +32,22 @@ function updateInventory() {
       
     });
     var spawn = require('child_process').spawn;
-    var prc = spawn('git',  ['pull']);
+    var prc = spawn('git',  ['reset --hard']);
     prc.stdout.setEncoding('utf8');
     prc.stdout.on('data', function (data) {
         var str = data.toString()
         var lines = str.split(/(\r?\n)/g);
         console.log(lines.join(""));
-    }); 
+    });
+    prc.on('close', (code) => {
+      var pull = spawn('git',  ['pull']);
+      pull.stdout.setEncoding('utf8');
+      pull.stdout.on('data', function (data) {
+          var str = data.toString()
+          var lines = str.split(/(\r?\n)/g);
+          console.log(lines.join(""));
+      });
+    });
   });
 }
 
