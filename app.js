@@ -129,11 +129,11 @@ function registerScreen(electronScreen) {
 function processConfig() {
   // This process checks that the device is ready to be used.
   // This also fires the "updateInventory" command and sets up 
-  // the 1 minute timer for inventory updating.
+  // the 8 minute timer for inventory updating.
   request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getPlayer/' + process.env.PLAYER_ID, function(err,httpResponse,body){
     initializeScreens(JSON.parse(body));
     updateInventory();
-    setInterval(updateInventory, 60000);
+    setInterval(updateInventory, 500000);
   })
 }
 
