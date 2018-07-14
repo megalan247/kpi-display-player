@@ -33,7 +33,7 @@ function updateInventory() {
         displayErrorScreen("Unable to update inventory, please check your conenction and try to reload your configuration.", err);
       }
     });
-/*     var spawn = require('child_process').spawn;
+     var spawn = require('child_process').spawn;
     var prc = spawn('git',  ['reset --hard']);
     prc.stdout.setEncoding('utf8');
     prc.stdout.on('data', function (data) {
@@ -49,7 +49,7 @@ function updateInventory() {
           var lines = str.split(/(\r?\n)/g);
           console.log(lines.join(""));
       });
-    }); */
+    }); 
   });
 }
 
