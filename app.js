@@ -24,14 +24,16 @@ function updateInventory() {
       serialNumber: data.serial,
       OSName: os.platform(),
       OSVersion: os.release(),
-      macAddress: "WAITING FOR UPDATE",
+      macAddress: "NOT IMPLIMENTED",
       freeSpace: "NOT IMPLIMENTED",
       cpu: "NOT IMPLIMENTED",
     }  
     request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/updatePlayer', form: formData} , function(err,httpResponse,body){
-      
+      if (err) {
+        displayErrorScreen("Unable to update inventory, please check your conenction and try to reload your configuration.", err);
+      }
     });
-    var spawn = require('child_process').spawn;
+/*     var spawn = require('child_process').spawn;
     var prc = spawn('git',  ['reset --hard']);
     prc.stdout.setEncoding('utf8');
     prc.stdout.on('data', function (data) {
@@ -47,7 +49,7 @@ function updateInventory() {
           var lines = str.split(/(\r?\n)/g);
           console.log(lines.join(""));
       });
-    });
+    }); */
   });
 }
 
@@ -87,6 +89,7 @@ function setCookies(browser, sites) {
 
 function assignSites(screen, electronScreen) {
   request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getSites/' + screen.screen_id, function(err,httpResponse,body){
+    if (err) throw err;
     var parsedResponse = JSON.parse(body);
     var browser = new BrowserWindow({
       fullscreen: true, 
@@ -104,26 +107,76 @@ function assignSites(screen, electronScreen) {
 function initializeScreens(playerConfig) {
   screenArray = electron.screen.getAllDisplays();
   request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getScreens/' + process.env.PLAYER_ID, function(err,httpResponse,body){
-    var configFromServer = JSON.parse(body);
-    screenArray.forEach(function(scr) {
-        if (configFromServer.length == 0) {
-            registerScreen(scr);
-        }
-        for(var k in configFromServer) {
-            if (configFromServer[k].screen_electronScreenId == scr.id) {
-                assignSites(configFromServer[k], scr);
+    if (err) {
+      displayErrorScreen("Error when gettign config for player ID " + process.env.PLAYER_ID, err);
+    } else {
+      var configFromServer = JSON.parse(body);
+      screenArray.forEach(function(scr) {
+          if (configFromServer.length == 0) { // If there are no screens associated with this player for some reason, register this screen.
+            try {
+              registerScreen(scr);
+            } catch(err) {
+              displayErrorScreen("Error when registering screen to server. Is there a screen to register?", err);
+              console.log("Error when registering screen to server. Is there a screen to register?", err);
             }
-        }
-    });
+          }
+          try {
+            for(var k in configFromServer) { // Otherwise just get and assign screens based on electronScreenId
+              if (configFromServer[k].screen_electronScreenId == scr.id) {
+                  assignSites(configFromServer[k], scr);
+              }
+            }
+          } catch(err) {
+            displayErrorScreen("Error in initilizing screens, please check your screen config.", err);
+          }
+
+      });
+    }
+
       
   })
 }
 
 function registerScreen(electronScreen) {
     request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/registerScreen', form: {electronId: electronScreen.id, playerID: process.env.PLAYER_ID}} , function(err,httpResponse,body){
+      if (err) {
+        throw err;
+      } else {
         var parsedRespose = JSON.parse(body);
         assignSites(parsedRespose, electronScreen)
+      }
     });
+}
+
+function displayErrorScreen(errorbody, err) {
+  try {
+    var interfaces = os.networkInterfaces();
+    var addresses = [];
+    for (var k in interfaces) {
+        for (var k2 in interfaces[k]) {
+            var address = interfaces[k][k2];
+            if (address.family === 'IPv4' && !address.internal) {
+                addresses.push(address.address);
+            }
+        }
+    }
+    BrowserWindow.getAllWindows().forEach(function(item) {
+      item.close();
+    });
+    electron.screen.getAllDisplays().forEach(function(item) {
+      var browser = new BrowserWindow({
+        fullscreen: true, 
+        frame: false,
+        x: item.bounds.x + 50,
+        y: item.bounds.y + 50
+      })
+      var renderedHTML = pug.renderFile('./layouts/error.pug', {errorbody: errorbody, err: err, ips: addresses});
+      browser.loadURL('data:text/html;charset=utf-8,' + encodeURI(renderedHTML));
+    });
+  } catch(error) {
+    console.log("Unable to render the error page. Is this a headless session?", error);
+  }
+
 }
 
 function processConfig() {
@@ -131,9 +184,14 @@ function processConfig() {
   // This also fires the "updateInventory" command and sets up 
   // the 8 minute timer for inventory updating.
   request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getPlayer/' + process.env.PLAYER_ID, function(err,httpResponse,body){
-    initializeScreens(JSON.parse(body));
-    updateInventory();
-    setInterval(updateInventory, 500000);
+    if (err) {
+        displayErrorScreen("Unable to connect to management server, please check your internet connection and try again.", err);
+    } else {
+      initializeScreens(JSON.parse(body));
+      updateInventory();
+      setInterval(updateInventory, 500000);
+    }
+
   })
 }
 
@@ -160,27 +218,46 @@ function getConfig() {
       OSVersion: os.release(),
       macAddress: "WAITING FOR UPDATE"
     }
+
+    // POST Data to server to rgister player in database. In the future
+    // we can impliment some kind of adoption process to authorize a player to be registered
+    // however for now it just accepts any request. 
     
     request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/registerPlayer', form: formData} , function(err,httpResponse,body){
-      // Then appends the requested player ID to the environment file to persisit the ID
-      fs.appendFile('.env', "\nPLAYER_ID=" + JSON.parse(body).id, function (err) {
-        if (err) throw err;
-        console.log('Updated .env file with player id');
-        require('dotenv').config(); //Reaquire configuration from .env file
-        electron.screen.getAllDisplays().forEach(function(item) {
+      if (err) {
+        // If the managemetn server cannot be contacted, display an error screen explaining whats up
+        displayErrorScreen("Error when registering player, please check your internet connection and try again. Error details: " + err);
+      } else {
+        // Then appends the requested player ID to the environment file to persisit the ID
+        fs.appendFile('.env', "\nPLAYER_ID=" + JSON.parse(body).id, function (err) {
+          if (err) {
+            displayErrorScreen("Error when writing .env file data. Please check permissions for this file. Error details: " + err);
+          } else {
+            console.log('Updated .env file with player id');
+            require('dotenv').config(); //Reaquire configuration from .env file
+            electron.screen.getAllDisplays().forEach(function(item) {
 
-          //For every screen it will register the screen 
-          // as a new screen, then the registerScreen event will show a default webpage
-          // which can then be reconfigured in the management console
+              //For every screen it will register the screen 
+              // as a new screen, then the registerScreen event will show a default webpage
+              // which can then be reconfigured in the management console
 
-          registerScreen(item); 
-          });
-      });
+              // If it fails for ehatever reason trows an error and displays error screen
+              try {
+                registerScreen(item);
+              } catch(err) {
+                displayErrorScreen("Error when registering screens. ", err);
+              }
+            });
+          }
+             
+
+        });
+    }
+
     })
 
   } else {
     // If all required things are in the .env file it will use these to get and process the configuration from the server
-
     processConfig();
   }
 }
@@ -190,8 +267,13 @@ app.on('ready', getConfig)
 
 // Reopen windows when all windows are closed. Sort of "watchdog"
 app.on('window-all-closed', function () {
-  initializeScreens();
+  processConfig();
 })
+
+app.on('uncaughtException', function(err) {
+  displayErrorScreen("Uncaught exception, check console logs.");
+  console.log(err);
+});
 
 function updateConfig(req, res) {
     res.send({result: "SUCCESS"});

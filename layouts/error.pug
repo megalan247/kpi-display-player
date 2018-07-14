@@ -1,0 +1,56 @@
+
+style.
+    html, body {
+        height: 100%;
+        width:90%;
+        overflow: hidden;
+        background-color: #007d71;
+        color: #fcfcfc;
+        display: table;
+        margin:auto;
+    }
+
+    .error-page {
+        display: table-cell;
+        vertical-align: middle;
+        text-align: center;
+        height: 100%;
+        width: 100%;
+        font-family: sans-serif;
+        font-weight: bold;
+    }
+    .error-page h1 {
+        font-size: 30vh;
+        
+        padding: 0;
+    }
+    .error-page {
+        font-size: 8vh;
+        font-weight: bold;
+        line-height: 10vh;
+        max-width: 90vw;
+    }
+
+    .smallerror {
+        position: fixed;
+        bottom: 0;
+        font-size: 12px;
+        margin: 0;
+        padding: 0;
+    }
+
+    .right {
+        right: 1vw;
+    }
+
+    .left {
+        left: 1vw;
+    }
+
+
+.error-page
+  div
+    h1 Error
+    span= errorbody
+    .smallerror.right= err
+    .smallerror.left= ips
