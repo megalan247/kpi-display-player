@@ -152,6 +152,15 @@ function registerScreen(electronScreen) {
 }
 
 function displayErrorScreen(errorbody, err, electronScreen) {
+
+  // This function is the err rscreen dipslayer. It gracefully displays error screens 
+  // if there is a problem with the display. In teh future it will also report errors
+  // to the management server.
+  // If electronScreen is defined it will only open an error screen on that screen
+  // If not it will open on all screens.
+
+
+  // This gets the IP addresses of the network cards on the system to display on teh screen
   try {
     var interfaces = os.networkInterfaces();
     var addresses = [];
