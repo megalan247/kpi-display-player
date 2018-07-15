@@ -1,17 +1,15 @@
 require('dotenv').config();
 const electron = require('electron');
-const {app, BrowserWindow, session} = electron;
+const {app, BrowserWindow} = electron;
 const request = require('request');
 const fs = require('fs');
-const bodyParser = require("body-parser");
 const pug = require('pug');
 const express = require('express');
 const expressApp = express();
-const {autoUpdater} = require("electron-updater");
 const si = require('systeminformation');
 const os = require('os');
-const powerSaveBlocker = require('electron').powerSaveBlocker;
-powerSaveBlocker.start('prevent-app-suspension');
+var spawn = require('child_process').spawn;
+var schedule = require('node-schedule');
 
 
 function updateInventory() {
@@ -33,7 +31,6 @@ function updateInventory() {
         displayErrorScreen("Unable to update inventory, please check your conenction and try to reload your configuration.", err);
       }
     });
-     var spawn = require('child_process').spawn;
     var prc = spawn('git',  ['reset --hard']);
     prc.stdout.setEncoding('utf8');
     prc.stdout.on('data', function (data) {
@@ -95,12 +92,18 @@ function assignSites(screen, electronScreen) {
       fullscreen: true, 
       frame: false,
       x: electronScreen.bounds.x + 50,
-      y: electronScreen.bounds.y + 50
+      y: electronScreen.bounds.y + 50,
+      alwaysOnTop: true
     })
-    var renderedHTML = pug.renderFile('./layouts/layout' + screen.screen_layout + '.pug', {main: JSON.parse(body)});
-    browser.loadURL('data:text/html;charset=utf-8,' + encodeURI(renderedHTML));
-    setCookies(browser, parsedResponse);
-    executeJavaScriptInBrowser(browser, parsedResponse);
+    try {
+      var renderedHTML = pug.renderFile('./layouts/layout' + screen.screen_layout + '.pug', {main: JSON.parse(body)});
+      browser.loadURL('data:text/html;charset=utf-8,' + encodeURI(renderedHTML));
+      setCookies(browser, parsedResponse);
+      executeJavaScriptInBrowser(browser, parsedResponse);
+    } catch(error) {
+      displayErrorScreen("Unable to render HTML for page. Check you have enough sites added and refresh the config.", error, electronScreen)
+    }
+
   });
 }
 
@@ -148,7 +151,7 @@ function registerScreen(electronScreen) {
     });
 }
 
-function displayErrorScreen(errorbody, err) {
+function displayErrorScreen(errorbody, err, electronScreen) {
   try {
     var interfaces = os.networkInterfaces();
     var addresses = [];
@@ -160,29 +163,40 @@ function displayErrorScreen(errorbody, err) {
             }
         }
     }
-    BrowserWindow.getAllWindows().forEach(function(item) {
-      item.close();
-    });
-    electron.screen.getAllDisplays().forEach(function(item) {
+    if (electronScreen) {
       var browser = new BrowserWindow({
         fullscreen: true, 
         frame: false,
-        x: item.bounds.x + 50,
-        y: item.bounds.y + 50
-      })
+        x: electronScreen.bounds.x + 50,
+        y: electronScreen.bounds.y + 50,
+        alwaysOnTop: true
+      });
       var renderedHTML = pug.renderFile('./layouts/error.pug', {errorbody: errorbody, err: err, ips: addresses});
       browser.loadURL('data:text/html;charset=utf-8,' + encodeURI(renderedHTML));
+    } else {
+      electron.screen.getAllDisplays().forEach(function(item) {
+        var browser = new BrowserWindow({
+          fullscreen: true, 
+          frame: false,
+          x: item.bounds.x + 50,
+          y: item.bounds.y + 50,
+          alwaysOnTop: true
+        });
+        var renderedHTML = pug.renderFile('./layouts/error.pug', {errorbody: errorbody, err: err, ips: addresses});
+        browser.loadURL('data:text/html;charset=utf-8,' + encodeURI(renderedHTML));
     });
-  } catch(error) {
-    console.log("Unable to render the error page. Is this a headless session?", error);
+    }
+  } catch (error) {
+    throw error;
   }
-
 }
 
 function processConfig() {
   // This process checks that the device is ready to be used.
   // This also fires the "updateInventory" command and sets up 
   // the 8 minute timer for inventory updating.
+  // This function also creates cron jobs to turn off the monitors 
+  // automatically at certain times. This is to save power
   request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getPlayer/' + process.env.PLAYER_ID, function(err,httpResponse,body){
     if (err) {
         displayErrorScreen("Unable to connect to management server, please check your internet connection and try again.", err);
@@ -190,6 +204,8 @@ function processConfig() {
       initializeScreens(JSON.parse(body));
       updateInventory();
       setInterval(updateInventory, 500000);
+      schedule.scheduleJob('0 7  * * 1-5', powerOnMonitors);
+      schedule.scheduleJob('0 20 * * 1-5', powerOffMonitors);
     }
 
   })
@@ -296,14 +312,26 @@ function upgradeApplication(req, res) {
   res.send({result: "success"});
 }
 
-function rebootSystem(req, res) {
+function powerOffMonitors() {
+  if (os.platform() == "win32") {
+    spawn(__dirname + '\\bin\\nircmdc.exe',  ['monitor', 'off']);
+  } else if (os.platform() == "linux") {
+    spawn('/usr/bin/vcgencmd',  ['display_power 0']);
+  }
 
+};
+
+function powerOnMonitors() {
+  if (os.platform() == "win32") {
+    spawn('shutdown',  ['-r -t 0 -f']);
+  } else if (os.platform() == "linux") {
+    spawn('/usr/bin/vcgencmd',  ['display_power 1']);
+  }
 }
 
 expressApp.get('/update', updateConfig);
 expressApp.get('/upgrade', upgradeApplication);
-expressApp.get('/reboot', rebootSystem);
 expressApp.get('/quit', (req, res) => {res.send({result: "SUCCESS"}); process.exit()});
 
 
-expressApp.listen(4000, () => console.log('Player listening on port 4000 for commands'))
+expressApp.listen(4000, () => console.log('Player listening on port 4000 for commands'));
