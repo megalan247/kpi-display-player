@@ -92,8 +92,7 @@ function assignSites(screen, electronScreen) {
       fullscreen: true, 
       frame: false,
       x: electronScreen.bounds.x + 50,
-      y: electronScreen.bounds.y + 50,
-      alwaysOnTop: true
+      y: electronScreen.bounds.y + 50
     })
     try {
       var renderedHTML = pug.renderFile('./layouts/layout' + screen.screen_layout + '.pug', {main: JSON.parse(body)});
@@ -177,8 +176,7 @@ function displayErrorScreen(errorbody, err, electronScreen) {
         fullscreen: true, 
         frame: false,
         x: electronScreen.bounds.x + 50,
-        y: electronScreen.bounds.y + 50,
-        alwaysOnTop: true
+        y: electronScreen.bounds.y + 50
       });
       var renderedHTML = pug.renderFile('./layouts/error.pug', {errorbody: errorbody, err: err, ips: addresses});
       browser.loadURL('data:text/html;charset=utf-8,' + encodeURI(renderedHTML));
