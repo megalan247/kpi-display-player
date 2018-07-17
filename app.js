@@ -211,8 +211,8 @@ function processConfig() {
       initializeScreens(JSON.parse(body));
       updateInventory();
       setInterval(updateInventory, 500000);
-      schedule.scheduleJob('0 7  * * 1-5', powerOnMonitors);
-      schedule.scheduleJob('0 20 * * 1-5', powerOffMonitors);
+      schedule.scheduleJob('0 8  * * 1-5', powerOnMonitors);
+      schedule.scheduleJob('0 19 * * 1-5', powerOffMonitors);
     }
 
   })
