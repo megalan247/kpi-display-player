@@ -64,8 +64,9 @@ function executeJavaScriptInBrowser(browser, sites) {
         
       };
       console.log(sites[site].site_position);
-      browser.webContents.executeJavaScript("document.getElementById('webview" + sites[site].site_position + "').addEventListener('did-finish-load', () => {document.getElementById('webview1').executeJavaScript(\"" + combinedJSString + "\")});");
-      browser.webContents.executeJavaScript("document.getElementById('webview" + sites[site].site_position + "').addEventListener('did-frame-navigate', () => {document.getElementById('webview1').executeJavaScript(\"" + combinedJSString + "\")});");
+      browser.webContents.executeJavaScript("document.getElementById('webview" + sites[site].site_position + "').addEventListener('did-finish-load', () => {document.getElementById('webview" + sites[site].site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");
+      console.log("document.getElementById('webview" + sites[site].site_position + "').addEventListener('did-finish-load', () => {document.getElementById('webview" + sites[site].site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");
+      browser.webContents.executeJavaScript("document.getElementById('webview" + sites[site].site_position + "').addEventListener('did-frame-navigate', () => {document.getElementById('webview" + sites[site].site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");
     });
   }
 }
