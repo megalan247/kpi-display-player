@@ -50,38 +50,40 @@ function updateInventory() {
   });
 }
 
-function executeJavaScriptInBrowser(browser, sites) {
-  for(var site in sites) {
-    request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getJavaScript/' + sites[site].site_id, function(err,httpResponse,body){
-      var parsedResponse = JSON.parse(body);
-      var combinedJSString;
-       for(var k in parsedResponse) {
-        if(k == 0) {
-          combinedJSString = parsedResponse[k].js_command
-        } else {
-          combinedJSString += parsedResponse[k].js_command
-        } 
-        
-      };
-      console.log(sites[site].site_position);
-      browser.webContents.executeJavaScript("document.getElementById('webview" + sites[site].site_position + "').addEventListener('did-finish-load', () => {document.getElementById('webview" + sites[site].site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");
-      console.log("document.getElementById('webview" + sites[site].site_position + "').addEventListener('did-finish-load', () => {document.getElementById('webview" + sites[site].site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");
-      browser.webContents.executeJavaScript("document.getElementById('webview" + sites[site].site_position + "').addEventListener('did-frame-navigate', () => {document.getElementById('webview" + sites[site].site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");
+function executeJavaScriptInBrowser(browser, site) {
+  request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getJavaScript/' + site.site_id, function(err,httpResponse,body){
+    var parsedResponse = JSON.parse(body);
+    var combinedJSString;
+      for(var k in parsedResponse) {
+      if(k == 0) {
+        combinedJSString = parsedResponse[k].js_command
+      } else {
+        combinedJSString += parsedResponse[k].js_command
+      } 
+      
+    };
+
+    if (combinedJSString) {
+      browser.webContents.executeJavaScript("document.getElementById('webview" + site.site_position + "').addEventListener('did-finish-load', () => {document.getElementById('webview" + site.site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");
+      if (process.env.DEBUG == "Y") {
+        browser.webContents.executeJavaScript("document.getElementById('webview" + site.site_position + "').openDevTools();")
+      }
+      
+      console.log("document.getElementById('webview" + site.site_position + "').addEventListener('did-finish-load', () => {document.getElementById('webview" + site.site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");
+      browser.webContents.executeJavaScript("document.getElementById('webview" + site.site_position + "').addEventListener('did-frame-navigate', () => {document.getElementById('webview" + site.site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");  
+    }
     });
-  }
 }
 
 
-function setCookies(browser, sites) {
-  for(var site in sites) {
-    request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getCookies/' + sites[site].site_id, function(err,httpResponse,body){
-      var parsedResponse = JSON.parse(body);
-      for(var k in parsedResponse) {
-        browser.webContents.session.cookies.set({url: parsedResponse[k].cookie_url, name: parsedResponse[k].cookie_name, value: parsedResponse[k].cookie_value}, function(error) {
-        });
-      }; 
-    });
-  }
+function setCookies(browser, site) {
+  request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getCookies/' + site.site_id, function(err,httpResponse,body){
+    var parsedResponse = JSON.parse(body);
+    for(var k in parsedResponse) {
+      browser.webContents.session.cookies.set({url: parsedResponse[k].cookie_url, name: parsedResponse[k].cookie_name, value: parsedResponse[k].cookie_value}, function(error) {
+      });
+    }; 
+  });
 
 }
 
@@ -98,8 +100,13 @@ function assignSites(screen, electronScreen) {
     try {
       var renderedHTML = pug.renderFile('./layouts/layout' + screen.screen_layout + '.pug', {main: JSON.parse(body)});
       browser.loadURL('data:text/html;charset=utf-8,' + encodeURI(renderedHTML));
-      setCookies(browser, parsedResponse);
-      executeJavaScriptInBrowser(browser, parsedResponse);
+      for(var site in parsedResponse) {
+        setCookies(browser, parsedResponse[site]);
+        executeJavaScriptInBrowser(browser, parsedResponse[site]);
+      }
+
+
+      
     } catch(error) {
       displayErrorScreen("Unable to render HTML for page. Check you have enough sites added and refresh the config.", error, electronScreen)
     }
@@ -114,7 +121,12 @@ function initializeScreens(playerConfig) {
       displayErrorScreen("Error when gettign config for player ID " + process.env.PLAYER_ID, err);
     } else {
       var configFromServer = JSON.parse(body);
-      screenArray.forEach(function(scr) {
+
+      if(process.env.DEBUG == "Y") {
+        assignSites(configFromServer[0], screenArray[0]);
+      } else {
+
+        screenArray.forEach(function(scr) {
           if (configFromServer.length == 0) { // If there are no screens associated with this player for some reason, register this screen.
             try {
               registerScreen(scr);
@@ -133,7 +145,10 @@ function initializeScreens(playerConfig) {
             displayErrorScreen("Error in initilizing screens, please check your screen config.", err);
           }
 
-      });
+        });
+      }
+
+
     }
 
       
@@ -210,10 +225,13 @@ function processConfig() {
         displayErrorScreen("Unable to connect to management server, please check your internet connection and try again.", err);
     } else {
       initializeScreens(JSON.parse(body));
-      updateInventory();
-      setInterval(updateInventory, 500000);
-      schedule.scheduleJob('0 8  * * 1-5', powerOnMonitors);
-      schedule.scheduleJob('0 19 * * 1-5', powerOffMonitors);
+      if(process.env.DEBUG !== "Y") {
+        updateInventory();
+        setInterval(updateInventory, 500000);
+        schedule.scheduleJob('0 8  * * 1-5', powerOnMonitors);
+        schedule.scheduleJob('0 19 * * 1-5', powerOffMonitors);
+      }
+      
     }
 
   })
