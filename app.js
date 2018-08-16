@@ -122,31 +122,27 @@ function initializeScreens(playerConfig) {
     } else {
       var configFromServer = JSON.parse(body);
 
-      if(process.env.DEBUG == "Y") {
-        assignSites(configFromServer[0], screenArray[0]);
-      } else {
-
-        screenArray.forEach(function(scr) {
-          if (configFromServer.length == 0) { // If there are no screens associated with this player for some reason, register this screen.
-            try {
-              registerScreen(scr);
-            } catch(err) {
-              displayErrorScreen("Error when registering screen to server. Is there a screen to register?", err);
-              console.log("Error when registering screen to server. Is there a screen to register?", err);
-            }
-          }
+      screenArray.forEach(function(scr) {
+        if (configFromServer.length == 0) { // If there are no screens associated with this player for some reason, register this screen.
           try {
-            for(var k in configFromServer) { // Otherwise just get and assign screens based on electronScreenId
-              if (configFromServer[k].screen_electronScreenId == scr.id) {
-                  assignSites(configFromServer[k], scr);
-              }
-            }
+            registerScreen(scr);
           } catch(err) {
-            displayErrorScreen("Error in initilizing screens, please check your screen config.", err);
+            displayErrorScreen("Error when registering screen to server. Is there a screen to register?", err);
+            console.log("Error when registering screen to server. Is there a screen to register?", err);
           }
+        }
+        try {
+          for(var k in configFromServer) { // Otherwise just get and assign screens based on electronScreenId
+            if (configFromServer[k].screen_electronScreenId == scr.id) {
+                assignSites(configFromServer[k], scr);
+            }
+          }
+        } catch(err) {
+          displayErrorScreen("Error in initilizing screens, please check your screen config.", err);
+        }
 
-        });
-      }
+      });
+
 
 
     }
