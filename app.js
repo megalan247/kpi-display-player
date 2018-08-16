@@ -65,12 +65,12 @@ function executeJavaScriptInBrowser(browser, site) {
 
     if (combinedJSString) {
       browser.webContents.executeJavaScript("document.getElementById('webview" + site.site_position + "').addEventListener('did-finish-load', () => {document.getElementById('webview" + site.site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");
-      if (process.env.DEBUG == "Y") {
-        browser.webContents.executeJavaScript("document.getElementById('webview" + site.site_position + "').openDevTools();")
-      }
       
       console.log("document.getElementById('webview" + site.site_position + "').addEventListener('did-finish-load', () => {document.getElementById('webview" + site.site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");
       browser.webContents.executeJavaScript("document.getElementById('webview" + site.site_position + "').addEventListener('did-frame-navigate', () => {document.getElementById('webview" + site.site_position + "').executeJavaScript(\"" + combinedJSString + "\")});");  
+    }
+    if (process.env.DEBUG == "Y") {
+      browser.webContents.executeJavaScript("document.getElementById('webview" + site.site_position + "').openDevTools();")
     }
     });
 }
