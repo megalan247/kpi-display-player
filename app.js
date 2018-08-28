@@ -336,7 +336,7 @@ function upgradeApplication(req, res) {
 
 function powerOffMonitors() {
   if (os.platform() == "win32") {
-    spawn(__dirname + '\\bin\\nircmdc.exe',  ['monitor', 'off']);
+    //spawn(__dirname + '\\bin\\nircmdc.exe',  ['monitor', 'off']);
   } else if (os.platform() == "linux") {
     spawn('/usr/bin/vcgencmd',  ['display_power', '0']);
   }
@@ -345,7 +345,7 @@ function powerOffMonitors() {
 
 function powerOnMonitors() {
   if (os.platform() == "win32") {
-    spawn('shutdown',  ['-r', '-t', '0', '-f']);
+    //spawn('shutdown',  ['-r', '-t', '0', '-f']);
   } else if (os.platform() == "linux") {
     spawn('/usr/bin/vcgencmd',  ['display_power', '1']);
   }
