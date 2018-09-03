@@ -10,6 +10,7 @@ const si = require('systeminformation');
 const os = require('os');
 var spawn = require('child_process').spawn;
 var schedule = require('node-schedule');
+var is_error = False;
 
 
 function updateInventory() {
@@ -28,7 +29,16 @@ function updateInventory() {
     }  
     request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/updatePlayer', form: formData} , function(err,httpResponse,body){
       if (err) {
-        displayErrorScreen("Unable to update inventory, please check your conenction and try to reload your configuration.", err);
+        if (is_error == False) {
+          displayErrorScreen("Unable to update inventory, please check your conenction and try to reload your configuration.", err);
+        }
+      } else {
+        if (is_error == True) {
+          is_error == False;
+          BrowserWindow.getAllWindows().forEach(function(item) {
+            item.close();
+          });
+        }
       }
     });
     var prc = spawn('git',  ['reset --hard']);
@@ -183,6 +193,10 @@ function displayErrorScreen(errorbody, err, electronScreen) {
             }
         }
     }
+    is_error = True;
+    BrowserWindow.getAllWindows().forEach(function(item) {
+      item.close();
+    });
     if (electronScreen) {
       var browser = new BrowserWindow({
         fullscreen: true, 
@@ -224,7 +238,7 @@ function processConfig() {
       if(process.env.DEBUG !== "Y") {
         updateInventory();
         setInterval(updateInventory, 500000);
-        schedule.scheduleJob('0 8  * * 1-5', powerOnMonitors);
+        schedule.scheduleJob('0 7  * * 1-5', powerOnMonitors);
         schedule.scheduleJob('0 19 * * 1-5', powerOffMonitors);
       }
       
@@ -305,7 +319,9 @@ app.on('ready', getConfig)
 
 // Reopen windows when all windows are closed. Sort of "watchdog"
 app.on('window-all-closed', function () {
-  processConfig();
+  if (is_error == False) {
+    processConfig();
+  }  
 })
 
 app.on('uncaughtException', function(err) {
