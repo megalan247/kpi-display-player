@@ -33,7 +33,7 @@ function updateInventory() {
           displayErrorScreen("Unable to update inventory, please check your conenction and try to reload your configuration.", err);
         }
       } else {
-        if (is_error == True) {
+        if (is_error == true) {
           is_error == false;
           BrowserWindow.getAllWindows().forEach(function(item) {
             item.close();
@@ -193,7 +193,7 @@ function displayErrorScreen(errorbody, err, electronScreen) {
             }
         }
     }
-    is_error = True;
+    is_error = true;
     BrowserWindow.getAllWindows().forEach(function(item) {
       item.close();
     });
