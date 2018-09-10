@@ -27,7 +27,7 @@ function updateInventory() {
       freeSpace: "NOT IMPLIMENTED",
       cpu: "NOT IMPLIMENTED",
     }  
-    request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/updatePlayer', form: formData} , function(err,httpResponse,body){
+    request.po<st({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/updatePlayer', form: formData} , function(err,httpResponse,body){
       if (err) {
         console.log("Unable to update. " + err)
       }
@@ -53,7 +53,7 @@ function updateApp() {
           console.log(lines.join(""));
       });
     }); 
-  } catch {
+  } catch (error) {
     console.log("Unable to update");
   }
 }
@@ -356,7 +356,7 @@ function powerOffMonitors() {
     } else if (os.platform() == "linux") {
       spawn('/usr/bin/vcgencmd',  ['display_power', '0']);
     }
-  } catch {
+  } catch (error) {
     console.log("Unable to update monitors.")
   }
 };
@@ -368,7 +368,7 @@ function powerOnMonitors() {
     } else if (os.platform() == "linux") {
       spawn('/usr/bin/vcgencmd',  ['display_power', '1']);
     }
-  } catch {
+  } catch (error) {
     console.log("Unable to turn on monitor!")
   }
 
