@@ -11,6 +11,7 @@ const os = require('os');
 var spawn = require('child_process').spawn;
 var schedule = require('node-schedule');
 var is_error = false;
+var proto = "http";
 
 
 function updateInventory() {
@@ -27,7 +28,7 @@ function updateInventory() {
       freeSpace: "NOT IMPLIMENTED",
       cpu: "NOT IMPLIMENTED",
     }  
-    request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/updatePlayer', form: formData} , function(err,httpResponse,body){
+    request.post({url: proto + '://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/updatePlayer', form: formData} , function(err,httpResponse,body){
       if (err) {
         console.log("Unable to update. " + err)
       }
@@ -59,7 +60,7 @@ function updateApp() {
 }
 
 function executeJavaScriptInBrowser(browser, site) {
-  request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getJavaScript/' + site.site_id, function(err,httpResponse,body){
+  request(proto + '://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getJavaScript/' + site.site_id, function(err,httpResponse,body){
     var parsedResponse = JSON.parse(body);
     var combinedJSString;
       for(var k in parsedResponse) {
@@ -85,7 +86,7 @@ function executeJavaScriptInBrowser(browser, site) {
 
 
 function setCookies(browser, site) {
-  request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getCookies/' + site.site_id, function(err,httpResponse,body){
+  request(proto + '://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getCookies/' + site.site_id, function(err,httpResponse,body){
     var parsedResponse = JSON.parse(body);
     for(var k in parsedResponse) {
       browser.webContents.session.cookies.set({url: parsedResponse[k].cookie_url, name: parsedResponse[k].cookie_name, value: parsedResponse[k].cookie_value}, function(error) {
@@ -96,7 +97,7 @@ function setCookies(browser, site) {
 }
 
 function assignSites(screen, electronScreen) {
-  request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getSites/' + screen.screen_id, function(err,httpResponse,body){
+  request(proto + '://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getSites/' + screen.screen_id, function(err,httpResponse,body){
     if (err) throw err;
     var parsedResponse = JSON.parse(body);
     var browser = new BrowserWindow({
@@ -124,7 +125,7 @@ function assignSites(screen, electronScreen) {
 
 function initializeScreens(playerConfig) {
   screenArray = electron.screen.getAllDisplays();
-  request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getScreens/' + process.env.PLAYER_ID, function(err,httpResponse,body){
+  request(proto + '://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getScreens/' + process.env.PLAYER_ID, function(err,httpResponse,body){
     if (err) {
       displayErrorScreen("Error when gettign config for player ID " + process.env.PLAYER_ID, err);
     } else {
@@ -160,7 +161,7 @@ function initializeScreens(playerConfig) {
 }
 
 function registerScreen(electronScreen) {
-    request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/registerScreen', form: {electronId: electronScreen.id, playerID: process.env.PLAYER_ID}} , function(err,httpResponse,body){
+    request.post({url: proto + '://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/registerScreen', form: {electronId: electronScreen.id, playerID: process.env.PLAYER_ID}} , function(err,httpResponse,body){
       if (err) {
         throw err;
       } else {
@@ -228,7 +229,7 @@ function processConfig() {
   // the 8 minute timer for inventory updating.
   // This function also creates cron jobs to turn off the monitors 
   // automatically at certain times. This is to save power
-  request('http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getPlayer/' + process.env.PLAYER_ID, function(err,httpResponse,body){
+  request(proto + '://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getPlayer/' + process.env.PLAYER_ID, function(err,httpResponse,body){
     if (err) {
         displayErrorScreen("Unable to connect to management server, please check your internet connection and try again.", err);
     } else {
@@ -252,6 +253,11 @@ function getConfig() {
       console.log("No environment file specified. Please specify HOST and HOST_PORT in a .env file. Exiting.");
       process.exit();
   }
+
+  if (process.env.SECURE == "Y") {
+    proto = "https";
+    console.log("Using https");
+  }
   // Checks for player id in environment file. if no 
   //player id exisits it assumes the player has not registed
   // with the server before and automatically registers
@@ -274,7 +280,7 @@ function getConfig() {
     // we can impliment some kind of adoption process to authorize a player to be registered
     // however for now it just accepts any request. 
     
-    request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/registerPlayer', form: formData} , function(err,httpResponse,body){
+    request.post({url: proto + '://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/registerPlayer', form: formData} , function(err,httpResponse,body){
       if (err) {
         // If the managemetn server cannot be contacted, display an error screen explaining whats up
         displayErrorScreen("Error when registering player, please check your internet connection and try again. Error details: " + err);
