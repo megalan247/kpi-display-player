@@ -27,7 +27,7 @@ function updateInventory() {
       freeSpace: "NOT IMPLIMENTED",
       cpu: "NOT IMPLIMENTED",
     }  
-    request.po<st({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/updatePlayer', form: formData} , function(err,httpResponse,body){
+    request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/updatePlayer', form: formData} , function(err,httpResponse,body){
       if (err) {
         console.log("Unable to update. " + err)
       }
