@@ -29,18 +29,14 @@ function updateInventory() {
     }  
     request.post({url: 'http://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/updatePlayer', form: formData} , function(err,httpResponse,body){
       if (err) {
-        if (is_error == false) {
-          displayErrorScreen("Unable to update inventory, please check your conenction and try to reload your configuration.", err);
-        }
-      } else {
-        if (is_error == true) {
-          is_error == false;
-          BrowserWindow.getAllWindows().forEach(function(item) {
-            item.close();
-          });
-        }
+        console.log("Unable to update. " + err)
       }
     });
+  });
+}
+
+function updateApp() {
+  try {
     var prc = spawn('git',  ['reset --hard']);
     prc.stdout.setEncoding('utf8');
     prc.stdout.on('data', function (data) {
@@ -57,7 +53,9 @@ function updateInventory() {
           console.log(lines.join(""));
       });
     }); 
-  });
+  } catch {
+    console.log("Unable to update");
+  }
 }
 
 function executeJavaScriptInBrowser(browser, site) {
@@ -237,7 +235,8 @@ function processConfig() {
       initializeScreens(JSON.parse(body));
       if(process.env.DEBUG !== "Y") {
         updateInventory();
-        setInterval(updateInventory, 500000);
+        setInterval(updateInventory, 30000);
+        setInterval(updateApp, 3600000);
         schedule.scheduleJob('0 7  * * 1-5', powerOnMonitors);
         schedule.scheduleJob('0 19 * * 1-5', powerOffMonitors);
       }
@@ -351,20 +350,28 @@ function upgradeApplication(req, res) {
 }
 
 function powerOffMonitors() {
-  if (os.platform() == "win32") {
-    //spawn(__dirname + '\\bin\\nircmdc.exe',  ['monitor', 'off']);
-  } else if (os.platform() == "linux") {
-    spawn('/usr/bin/vcgencmd',  ['display_power', '0']);
+  try {
+    if (os.platform() == "win32") {
+      spawn(__dirname + '\\bin\\nircmdc.exe',  ['monitor', 'off']);
+    } else if (os.platform() == "linux") {
+      spawn('/usr/bin/vcgencmd',  ['display_power', '0']);
+    }
+  } catch {
+    console.log("Unable to update monitors.")
   }
-
 };
 
 function powerOnMonitors() {
-  if (os.platform() == "win32") {
-    //spawn('shutdown',  ['-r', '-t', '0', '-f']);
-  } else if (os.platform() == "linux") {
-    spawn('/usr/bin/vcgencmd',  ['display_power', '1']);
+  try {
+    if (os.platform() == "win32") {
+      spawn('shutdown',  ['-r', '-t', '0', '-f']);
+    } else if (os.platform() == "linux") {
+      spawn('/usr/bin/vcgencmd',  ['display_power', '1']);
+    }
+  } catch {
+    console.log("Unable to turn on monitor!")
   }
+
 }
 
 expressApp.get('/update', updateConfig);
