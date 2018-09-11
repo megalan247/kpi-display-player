@@ -246,7 +246,7 @@ function processConfig() {
       if(process.env.DEBUG !== "Y") {
         updateInventory();
         setInterval(updateInventory, 30000);
-        setInterval(updateApp, 3600000);
+        //setInterval(updateApp, 3600000);
         schedule.scheduleJob('0 7  * * 1-5', powerOnMonitors);
         schedule.scheduleJob('0 19 * * 1-5', powerOffMonitors);
       }
