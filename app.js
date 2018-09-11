@@ -55,8 +55,8 @@ function updateApp() {
       });
       pull.on('close'), (code) => {
         var install = spawn('npm',  ['install']);
-        pull.stdout.setEncoding('utf8');
-        pull.stdout.on('data', function (data) {
+        install.stdout.setEncoding('utf8');
+        install.stdout.on('data', function (data) {
             var str = data.toString()
             var lines = str.split(/(\r?\n)/g);
             console.log(lines.join(""));
