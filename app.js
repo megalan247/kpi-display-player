@@ -53,6 +53,15 @@ function updateApp() {
           var lines = str.split(/(\r?\n)/g);
           console.log(lines.join(""));
       });
+      pull.on('close'), (code) => {
+        var install = spawn('npm',  ['install']);
+        pull.stdout.setEncoding('utf8');
+        pull.stdout.on('data', function (data) {
+            var str = data.toString()
+            var lines = str.split(/(\r?\n)/g);
+            console.log(lines.join(""));
+        });
+      }
     }); 
   } catch (error) {
     console.log("Unable to update");
@@ -342,17 +351,7 @@ function updateConfig(req, res) {
 }
 
 function upgradeApplication(req, res) {
-  var spawn = require('child_process').spawn;
-  var prc = spawn('git',  ['pull']);
-  
-  //noinspection JSUnresolvedFunction
-  prc.stdout.setEncoding('utf8');
-  prc.stdout.on('data', function (data) {
-      var str = data.toString()
-      var lines = str.split(/(\r?\n)/g);
-      console.log(lines.join(""));
-  });
-  res.send({result: "success"});
+  updateApp();
 }
 
 function powerOffMonitors() {
@@ -381,7 +380,9 @@ function powerOnMonitors() {
 }
 
 expressApp.get('/update', updateConfig);
+
 expressApp.get('/upgrade', upgradeApplication);
+
 expressApp.get('/quit', (req, res) => {res.send({result: "SUCCESS"}); process.exit()});
 
 
