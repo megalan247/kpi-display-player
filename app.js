@@ -53,7 +53,7 @@ function updateApp() {
           var lines = str.split(/(\r?\n)/g);
           console.log(lines.join(""));
       });
-      pull.on('close'), (code) => {
+      pull.on('close', (code) => {
         var install = spawn('npm',  ['install']);
         install.stdout.setEncoding('utf8');
         install.stdout.on('data', function (data) {
@@ -61,7 +61,7 @@ function updateApp() {
             var lines = str.split(/(\r?\n)/g);
             console.log(lines.join(""));
         });
-      }
+      });
     }); 
   } catch (error) {
     console.log("Unable to update");
@@ -350,10 +350,6 @@ function updateConfig(req, res) {
     });
 }
 
-function upgradeApplication(req, res) {
-  updateApp();
-}
-
 function powerOffMonitors() {
   try {
     if (os.platform() == "win32") {
@@ -381,7 +377,7 @@ function powerOnMonitors() {
 
 expressApp.get('/update', updateConfig);
 
-expressApp.get('/upgrade', upgradeApplication);
+expressApp.get('/upgrade', updateApp);
 
 expressApp.get('/quit', (req, res) => {res.send({result: "SUCCESS"}); process.exit()});
 
