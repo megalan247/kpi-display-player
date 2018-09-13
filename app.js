@@ -37,35 +37,35 @@ function updateInventory() {
 }
 
 function updateApp() {
-  try {
-    var prc = spawn('git',  ['reset --hard']);
-    prc.stdout.setEncoding('utf8');
-    prc.stdout.on('data', function (data) {
-        var str = data.toString()
-        var lines = str.split(/(\r?\n)/g);
-        console.log(lines.join(""));
-    });
-    prc.on('close', (code) => {
-      var pull = spawn('git',  ['pull']);
-      pull.stdout.setEncoding('utf8');
-      pull.stdout.on('data', function (data) {
-          var str = data.toString()
-          var lines = str.split(/(\r?\n)/g);
-          console.log(lines.join(""));
-      });
-      pull.on('close', (code) => {
-        var install = spawn('npm',  ['install']);
-        install.stdout.setEncoding('utf8');
-        install.stdout.on('data', function (data) {
-            var str = data.toString()
-            var lines = str.split(/(\r?\n)/g);
-            console.log(lines.join(""));
-        });
-      });
-    }); 
-  } catch (error) {
-    console.log("Unable to update");
-  }
+  // try {
+  //   var prc = spawn('git',  ['reset --hard']);
+  //   prc.stdout.setEncoding('utf8');
+  //   prc.stdout.on('data', function (data) {
+  //       var str = data.toString()
+  //       var lines = str.split(/(\r?\n)/g);
+  //       console.log(lines.join(""));
+  //   });
+  //   prc.on('close', (code) => {
+  //     var pull = spawn('git',  ['pull']);
+  //     pull.stdout.setEncoding('utf8');
+  //     pull.stdout.on('data', function (data) {
+  //         var str = data.toString()
+  //         var lines = str.split(/(\r?\n)/g);
+  //         console.log(lines.join(""));
+  //     });
+  //     pull.on('close', (code) => {
+  //       var install = spawn('npm',  ['install']);
+  //       install.stdout.setEncoding('utf8');
+  //       install.stdout.on('data', function (data) {
+  //           var str = data.toString()
+  //           var lines = str.split(/(\r?\n)/g);
+  //           console.log(lines.join(""));
+  //       });
+  //     });
+  //   }); 
+  // } catch (error) {
+  //   console.log("Unable to update");
+  // }
 }
 
 function executeJavaScriptInBrowser(browser, site) {
