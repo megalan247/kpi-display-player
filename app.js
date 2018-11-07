@@ -13,6 +13,9 @@ var schedule = require('node-schedule');
 var is_error = false;
 var proto = "http";
 
+app.commandLine.appendSwitch('remote-debugging-port', '8315');
+app.commandLine.appendSwitch('host-rules', 'MAP * 127.0.0.1');
+
 
 function updateInventory() {
 
@@ -327,6 +330,7 @@ function getConfig() {
     processConfig();
   }
 }
+
 
 // Get config once electron application is ready to be launched
 app.on('ready', getConfig)
