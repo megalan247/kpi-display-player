@@ -36,37 +36,6 @@ function updateInventory() {
   });
 }
 
-function updateApp() {
-  // try {
-  //   var prc = spawn('git',  ['reset --hard']);
-  //   prc.stdout.setEncoding('utf8');
-  //   prc.stdout.on('data', function (data) {
-  //       var str = data.toString()
-  //       var lines = str.split(/(\r?\n)/g);
-  //       console.log(lines.join(""));
-  //   });
-  //   prc.on('close', (code) => {
-  //     var pull = spawn('git',  ['pull']);
-  //     pull.stdout.setEncoding('utf8');
-  //     pull.stdout.on('data', function (data) {
-  //         var str = data.toString()
-  //         var lines = str.split(/(\r?\n)/g);
-  //         console.log(lines.join(""));
-  //     });
-  //     pull.on('close', (code) => {
-  //       var install = spawn('npm',  ['install']);
-  //       install.stdout.setEncoding('utf8');
-  //       install.stdout.on('data', function (data) {
-  //           var str = data.toString()
-  //           var lines = str.split(/(\r?\n)/g);
-  //           console.log(lines.join(""));
-  //       });
-  //     });
-  //   }); 
-  // } catch (error) {
-  //   console.log("Unable to update");
-  // }
-}
 
 function executeJavaScriptInBrowser(browser, site) {
   request(proto + '://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getJavaScript/' + site.site_id, function(err,httpResponse,body){
@@ -112,8 +81,12 @@ function assignSites(screen, electronScreen) {
     var browser = new BrowserWindow({
       fullscreen: true, 
       frame: false,
+      webviewTag: true,
       x: electronScreen.bounds.x + 50,
-      y: electronScreen.bounds.y + 50
+      y: electronScreen.bounds.y + 50,
+      additionalArguments: [
+        "--remote-debugging-port=8315"
+      ]
     })
     try {
       var renderedHTML = pug.renderFile('./layouts/layout' + screen.screen_layout + '.pug', {main: JSON.parse(body)});
@@ -122,9 +95,6 @@ function assignSites(screen, electronScreen) {
         setCookies(browser, parsedResponse[site]);
         executeJavaScriptInBrowser(browser, parsedResponse[site]);
       }
-
-
-      
     } catch(error) {
       displayErrorScreen("Unable to render HTML for page. Check you have enough sites added and refresh the config.", error, electronScreen)
     }
@@ -237,7 +207,7 @@ function processConfig() {
   // This also fires the "updateInventory" command and sets up 
   // the 8 minute timer for inventory updating.
   // This function also creates cron jobs to turn off the monitors 
-  // automatically at certain times. This is to save power
+  // automatically at cnpm update lodash --depth 5ertain times. This is to save power
   request(proto + '://' + process.env.HOST + ':' + process.env.HOST_PORT + '/api/v1/getPlayer/' + process.env.PLAYER_ID, function(err,httpResponse,body){
     if (err) {
         displayErrorScreen("Unable to connect to management server, please check your internet connection and try again.", err);
