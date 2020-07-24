@@ -6,7 +6,7 @@
   "repository": "https://github.com/megalan247/kpi-display-player",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electromon app.js",
+    "start": "electron app.js",
     "publish": "build --win --linux -p always"
   },
   "author": "",
@@ -14,6 +14,7 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "dotenv": "^8.2.0",
+    "electron": "^9.1.0",
     "electron-updater": "^4.3.1",
     "express": "^4.17.1",
     "node-schedule": "^1.3.2",

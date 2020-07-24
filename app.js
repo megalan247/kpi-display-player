@@ -81,12 +81,14 @@ function assignSites(screen, electronScreen) {
     var browser = new BrowserWindow({
       fullscreen: true, 
       frame: false,
-      webviewTag: true,
       x: electronScreen.bounds.x + 50,
       y: electronScreen.bounds.y + 50,
-      additionalArguments: [
-        "--remote-debugging-port=8315"
-      ]
+      webPreferences: {
+        webviewTag: true,
+        additionalArguments: [
+          "--remote-debugging-port=8315"
+        ]
+      }
     })
     try {
       var renderedHTML = pug.renderFile('./layouts/layout' + screen.screen_layout + '.pug', {main: JSON.parse(body)});
@@ -109,7 +111,6 @@ function initializeScreens(playerConfig) {
       displayErrorScreen("Error when gettign config for player ID " + process.env.PLAYER_ID, err);
     } else {
       var configFromServer = JSON.parse(body);
-
       screenArray.forEach(function(scr) {
         if (configFromServer.length == 0) { // If there are no screens associated with this player for some reason, register this screen.
           try {
@@ -180,7 +181,13 @@ function displayErrorScreen(errorbody, err, electronScreen) {
         fullscreen: true, 
         frame: false,
         x: electronScreen.bounds.x + 50,
-        y: electronScreen.bounds.y + 50
+        y: electronScreen.bounds.y + 50,
+        webPreferences: {
+          webviewTag: true,
+          additionalArguments: [
+            "--remote-debugging-port=8315"
+          ]
+        }
       });
       var renderedHTML = pug.renderFile('./layouts/error.pug', {errorbody: errorbody, err: err, ips: addresses});
       browser.loadURL('data:text/html;charset=utf-8,' + encodeURI(renderedHTML));
@@ -191,7 +198,13 @@ function displayErrorScreen(errorbody, err, electronScreen) {
           frame: false,
           x: item.bounds.x + 50,
           y: item.bounds.y + 50,
-          alwaysOnTop: true
+          alwaysOnTop: true,
+          webPreferences: {
+            webviewTag: true,
+            additionalArguments: [
+              "--remote-debugging-port=8315"
+            ]
+          }
         });
         var renderedHTML = pug.renderFile('./layouts/error.pug', {errorbody: errorbody, err: err, ips: addresses});
         browser.loadURL('data:text/html;charset=utf-8,' + encodeURI(renderedHTML));
@@ -216,7 +229,6 @@ function processConfig() {
       if(process.env.DEBUG !== "Y") {
         updateInventory();
         setInterval(updateInventory, 30000);
-        //setInterval(updateApp, 3600000);
         schedule.scheduleJob('0 7  * * 1-5', powerOnMonitors);
         schedule.scheduleJob('0 19 * * 1-5', powerOffMonitors);
       }
@@ -346,8 +358,6 @@ function powerOnMonitors() {
 }
 
 expressApp.get('/update', updateConfig);
-
-expressApp.get('/upgrade', updateApp);
 
 expressApp.get('/quit', (req, res) => {res.send({result: "SUCCESS"}); process.exit()});
 
