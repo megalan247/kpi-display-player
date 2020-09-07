@@ -7,6 +7,7 @@ const pug = require('pug');
 const express = require('express');
 const expressApp = express();
 const si = require('systeminformation');
+const internalIp = require('internal-ip');
 const os = require('os');
 var spawn = require('child_process').spawn;
 var schedule = require('node-schedule');
@@ -18,6 +19,7 @@ function updateInventory() {
 
   si.system(function(data) {
     var formData = {
+      ip: internalIp.v4.sync(),
       id: process.env.PLAYER_ID,
       name: os.hostname(),
       playerType: data.manufacturer + " " + data.model,
