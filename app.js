@@ -339,7 +339,7 @@ function powerOffMonitors() {
     if (os.platform() == "win32") {
       spawn(__dirname + '\\bin\\nircmdc.exe',  ['monitor', 'off']);
     } else if (os.platform() == "linux") {
-      spawn('/usr/bin/vcgencmd',  ['display_power', '0']);
+      spawn('xset',  ['-display', ':0.0', 'dpms', 'force', 'off']);
     }
   } catch (error) {
     console.log("Unable to update monitors.")
@@ -351,7 +351,7 @@ function powerOnMonitors() {
     if (os.platform() == "win32") {
       spawn('shutdown',  ['-r', '-t', '0', '-f']);
     } else if (os.platform() == "linux") {
-      spawn('/usr/bin/vcgencmd',  ['display_power', '1']);
+      spawn('xset',  ['-display', ':0.0', 'dpms', 'force', 'on']);
     }
   } catch (error) {
     console.log("Unable to turn on monitor!")
